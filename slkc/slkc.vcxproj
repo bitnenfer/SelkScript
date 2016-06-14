@@ -148,6 +148,7 @@
     <ClCompile Include="include\slkc\list.h" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\slkc\array.c" />
+    <ClCompile Include="src\slkc\compiler\lexer.c" />
     <ClCompile Include="src\slkc\compiler\token.c" />
     <ClCompile Include="src\slkc\list.c" />
     <ClCompile Include="src\slkc\memory.c" />

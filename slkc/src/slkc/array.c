@@ -7,7 +7,7 @@ usize sk_array_length(void* raw_array)
 	return header->item_length;
 }
 
-usize sk_array_capacity(void * raw_array)
+usize sk_array_capacity(void* raw_array)
 {
 	skArrayHeader* header = sk_backward_ptr(raw_array, sizeof(skArrayHeader));
 	return header->item_capacity;

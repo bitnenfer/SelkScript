@@ -16,8 +16,14 @@ void malloc_free(void* allocator, void* ptr);
 void malloc_clear(void* allocator);
 
 /* Global Malloc Allocator */
+static bool global_malloc_inited = false;
 static skMallocAllocator global_malloc_struct;
 static skAllocator global_malloc_allocator;
+
+/* Global Linear Allocator */
+static bool global_linear_inited = false;
+static skLinearAllocator global_linear_struct;
+static skAllocator global_linear_allocator;
 
 #define SK_SENTINEL_TAG 0xDEAD
 typedef struct skMallocHeader
@@ -34,7 +40,7 @@ SK_FORCEINLINE void* malloc_malloc(void* allocator, usize size, usize alignment)
 	void* alloc_ptr = NULL;
 	void* retrn_ptr = NULL;
 	skMallocHeader* header = NULL;
-	skMallocAllocator* malloc_alloc = NULL;	
+	skMallocAllocator* malloc_alloc = NULL;
 	malloc_alloc = (skMallocAllocator*)allocator;
 	alloc_ptr = malloc(size + sizeof(skMallocHeader));
 	retrn_ptr = sk_align_forward(sk_forward_ptr(alloc_ptr, sizeof(skMallocHeader)), alignment);
@@ -61,7 +67,8 @@ SK_FORCEINLINE void* malloc_malloc(void* allocator, usize size, usize alignment)
 
 SK_FORCEINLINE void* malloc_realloc(void* allocator, void* ptr, usize old_size, usize new_size, usize alignment)
 {
-	if (old_size < new_size) {
+	if (old_size < new_size)
+	{
 		void* new_ptr = malloc_malloc(allocator, new_size, alignment);
 		new_ptr = memcpy(new_ptr, ptr, old_size);
 		malloc_free(allocator, ptr);
@@ -136,7 +143,7 @@ SK_FORCEINLINE void* linear_realloc(void* allocator, void* ptr, usize old_size, 
 
 SK_FORCEINLINE void linear_free(void* allocator, void* ptr)
 {
-	SK_ERROR("Can't free memory on linear allocator.\n");
+	//SK_ERROR("Can't free memory on linear allocator.\n");
 }
 
 SK_FORCEINLINE void linear_clear(void* allocator)
@@ -181,11 +188,38 @@ skAllocator sk_gmalloc()
 	return global_malloc_allocator;
 }
 
-void sk_init_gmalloc()
+skAllocator sk_lmalloc()
 {
-	global_malloc_allocator = sk_malloc_allocator(&global_malloc_struct);
+	return global_linear_allocator;
 }
 
+void sk_init_gmalloc()
+{
+	if (global_malloc_inited) return;
+	global_malloc_allocator = sk_malloc_allocator(&global_malloc_struct);
+	global_malloc_inited = true;
+}
+
+void sk_init_lmalloc(usize size)
+{
+	if (global_linear_inited) return;
+	sk_init_gmalloc();
+	sk_linear_allocator_init(&global_linear_struct, sk_mem_alloc(sk_gmalloc(), size, 4), size);
+	global_linear_allocator = sk_linear_allocator(&global_linear_struct);
+	global_linear_inited = true;
+}
+
+void sk_init_memory(usize linear_size)
+{
+	sk_init_gmalloc();
+	sk_init_lmalloc(linear_size);
+}
+
+void sk_shutdown_memory()
+{
+	sk_mem_clear(global_linear_allocator);
+	sk_mem_clear(global_malloc_allocator);
+}
 /* --- */
 
 void* sk_mem_alloc(skAllocator allocator, usize size, usize alignment)
