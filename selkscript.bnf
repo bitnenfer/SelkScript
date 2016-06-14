@@ -1,1 +1,228 @@
-Me acorde de una idea que tenia hace mucho tiempo, no necesariamente para ganar plata :P. Una era hacer una especie de HandmadeHero pero en espanol. Otra idea era hacer entrevista tecnicas a programadores latinoamericanos. Generalmente siempre veo charlas de 10 - 15 min donde desarrolladores solo tocan la superficie de temas potencialmente super interesantes. Seria entretenido ver conversaciones de +45 minutos con programadores experimentados. Se por experiencia propia que en Chile hay personas mega cabronas que generalmente son low profile y que tienen puntos de vista o conocimientos que podrian beneficiar al resto.
+!======================================================
+!   
+!   // Small Example of SelkScript code.
+!
+!    struct vec2 {
+!        float x;
+!        float y;
+!    }
+!
+!    vec2 new_vec2(float x, float y) {
+!        vec2 v;
+!        v.x = x;
+!        v.y = y;
+!        return v;
+!    }
+!
+!    void main() {
+!        int a = 100;
+!        int b = 100 + a;
+!        vec2 a = {100, 100};
+!    }
+!
+!    void onProcess(ref vec2 velocity, const vec2 acceleration) {
+!        velocity.x += acceleration.x;
+!        velocity.y += acceleration.y;
+!    }
+!
+!======================================================
+	
+"Name"          =   'SelkScript'
+"Author"        =   'Felipe Alfonso'
+"Version"       =   '0.0.1'
+"About"         =   'SelkScript is a simple C based programming language designed for game development.'
+
+"Start Symbol"  =   <program>
+
+!======================================================
+!   STATEMENTS
+!======================================================
+
+<program>				::= <var-decl>
+							|
+							<func-decl>
+							|
+							<struct-decl>
+
+<stmt-seq>				::=	<stmt> <line-feed> <stmt-seq>
+							|
+							<stmt>
+					
+<stmt>					::=	<if-stmt>
+							|
+							<assign-stmt>
+							|
+							<while-stmt>
+							|
+							<var-decl>
+							|
+							<array-literal>
+
+<if-stmt>				::= 'if' '(' <or-expr> ')' '{' <stmt-seq> '}'
+
+<elseif-stmt>			::= 'else if' '(' <or-expr> ')' '{' <stmt-seq> ( <elseif-stmt> | <else-stmt> ) '}'
+
+<else-stmt>				::= 'else' '{' <stmt-set> '}'
+
+<assign-stmt>			::= <identifier> '=' <array-literal>
+
+<break-stmt>			::= 'break'
+
+<continue-stmt>			::= 'continue'
+
+<while-stmt>			::= 'while' '(' <or-expr> ')' '{' { <stmt> <line-feed> | <break-stmt>  | <continue-stmt> } '}'
+
+<return-stmt>			::= 'return' <array-literal>
+
+!======================================================
+!   DECLARATIONS
+!======================================================
+
+<func-decl>				::= ( <type-name> | 'void' ) <identifier> '(' <var-decl-list> ')' '{' { <stmt> <line-feed> | <return-stmt> } '}'
+
+<struct-decl>			::= 'struct' <identifier> '{' <var-decl-list> '}'
+
+<var-decl-list>			::= <var-decl> ';' <var-decl-list>
+							|
+							<var-decl> ';'
+
+<var-decl>				::= <type-name> ( <identifier> | '=' <or-expr> )
+
+
+!======================================================
+!   EXPRESSIONS
+!======================================================
+
+<expr-list>				::= <array-literal> ',' <expr-list>
+							|
+							<array-literal>
+
+<array-literal>			::= '[' <expr-list> ']' 
+							|
+							<struct-literal>
+
+<struct-literal>		::= '{' <expr-list> '}'
+							|
+							<member-access>
+							
+<member-access>			::= <identifier> '.' <member-access>
+							|
+							<or-expr>						
+						
+<or-expr>				::=	<and-expr> '||' <or-expr>
+							|
+							<and-expr>
+
+<and-expr>				::=	<not-expr> '&&' <and-expr>
+							|
+							<not-expr>
+
+<not-expr>				::=	'!' <compare-expr>
+							|
+							<compare-expr>
+							
+<compare-expr>			::=	<bitwise-expr> '==' <compare-expr>
+							|
+							<bitwise-expr> '<' <compare-expr>
+							|
+							<bitwise-expr> '>' <compare-expr>
+							|
+							<bitwise-expr> '!=' <compare-expr>
+							|
+							<bitwise-expr> '>=' <compare-expr>
+							|
+							<bitwise-expr> '<=' <compare-expr>
+							|
+							<bitwise-expr>
+
+<bitwise-expr>			::= <modulus-expr> '>>' <bitwise-expr>
+							|
+							<modulus-expr> '<<' <bitwise-expr>
+							|
+							<modulus-expr> '^' <bitwise-expr>
+							|
+							<modulus-expr> '|' <bitwise-expr>
+							|
+							<modulus-expr> '&' <bitwise-expr>
+							|
+							<modulus-expr>
+
+<modulus-expr>			::= <additive-expr> '%' <modulus-expr>
+							|
+							<additive-expr>
+
+<additive-expr>			::=	<multiplicative-expr> '+' <additive-expr>
+							|
+							<multiplicative-expr> '-' <additive-expr>
+							|
+							<multiplicative-expr>
+
+<multiplicative-expr>	::=	<negate-expr> '*' <multiplicative-expr>
+							|
+							<negate-expr> '/' <multiplicative-expr>
+							|
+							<negate-expr>
+
+<negate-expr>			::= '-' <call-expr>
+							|
+							<call-expr>
+
+<call-expr>				::	<identifier> '(' <expr-list> ')'
+							|
+							<factor>
+
+<factor>				::= <float-const>
+							|
+							<integer-const>
+							|
+							<identifier>
+							|
+							<boolean-const>
+							|
+							'(' <or-expr> ')'
+
+<string-const>			::= '"' <any-char> '"'
+
+<float-const>			::= { <digit> } . { <digit> }
+
+<integer-const>			::= <digit> { <digit> }
+
+<boolean-const>			::= ( 'true' | 'false' )
+
+<type-name>				::= 'ref' <type-name>
+							|
+							<identifier>
+							|
+							'int'
+							|
+							'float'
+							
+<identifier>			::= <alpha> { <alpha> | <digit> | '_' }
+
+<digit>					::= '0' 
+							|   
+							'1' 
+							|   
+							... 
+							|   
+							'9'
+
+<alpha>					::=	'a'
+							|   
+							'b' 
+							|
+							'c' 
+							|
+							... 
+							|
+							'z' 
+							|
+							'A' 
+							|
+							'B' 
+							|
+							'C' 
+							|
+							... 
+							|
+							'Z'
