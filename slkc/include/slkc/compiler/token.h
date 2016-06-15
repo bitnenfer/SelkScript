@@ -2,9 +2,11 @@
 #define SLKC_COMPILER_TOKEN_H
 
 #include <slkc/types.h>
+#include <slkc/macros.h>
 
 typedef enum skETokenType
 {
+	TOKEN_INVALID,
 	TOKEN_IDENT,
 	TOKEN_EOF,
 	TOKEN_SYM_COMMA,
@@ -23,7 +25,7 @@ typedef enum skETokenType
 	TOKEN_SYM_LBRACK,
 	TOKEN_SYM_RBRACK,
 	TOKEN_SYM_PERCENT,
-	TOKEN_SYM_AMPRESAND,
+	TOKEN_SYM_AMPERSAND,
 	TOKEN_SYM_OBELISK,
 	TOKEN_SYM_CARET,
 	TOKEN_SYM_LOWERTHAN,
@@ -42,11 +44,107 @@ typedef enum skETokenType
 	TOKEN_WORD_IF,
 	TOKEN_WORD_REF,
 	TOKEN_WORD_CONST,
+	TOKEN_WORD_IMPORT,
 	TOKEN_LIT_STRING,
 	TOKEN_LIT_INT,
 	TOKEN_LIT_FLOAT,
 	TOKEN_LIT_BOOL
 } skETokenType;
+
+SK_FORCEINLINE ascii_char* sk_token_name(skETokenType type)
+{
+	switch (type)
+	{
+		case TOKEN_INVALID:
+			return "TOKEN_INVALID";
+		case TOKEN_IDENT:
+			return "TOKEN_IDENT";
+		case TOKEN_EOF:
+			return "TOKEN_EOF";
+		case TOKEN_SYM_COMMA:
+			return "TOKEN_SYM_COMMA";
+		case TOKEN_SYM_DOT:
+			return "TOKEN_SYM_DOT";
+		case TOKEN_SYM_SEMICOLON:
+			return "TOKEN_SYM_SEMICOLON";
+		case TOKEN_SYM_PLUS:
+			return "TOKEN_SYM_PLUS";
+		case TOKEN_SYM_MINUS:
+			return "TOKEN_SYM_MINUS";
+		case TOKEN_SYM_ASTERISK:
+			return "TOKEN_SYM_ASTERISK";
+		case TOKEN_SYM_SLASH:
+			return "TOKEN_SYM_SLASH";
+		case TOKEN_SYM_EQUAL:
+			return "TOKEN_SYM_EQUAL";
+		case TOKEN_SYM_EXCLAM:
+			return "TOKEN_SYM_EXCLAM";
+		case TOKEN_SYM_LPAREN:
+			return "TOKEN_SYM_LPAREN";
+		case TOKEN_SYM_RPAREN:
+			return "TOKEN_SYM_RPAREN";
+		case TOKEN_SYM_LCURLY:
+			return "TOKEN_SYM_LCURLY";
+		case TOKEN_SYM_RCURLY:
+			return "TOKEN_SYM_RCURLY";
+		case TOKEN_SYM_LBRACK:
+			return "TOKEN_SYM_LBRACK";
+		case TOKEN_SYM_RBRACK:
+			return "TOKEN_SYM_RBRACK";
+		case TOKEN_SYM_PERCENT:
+			return "TOKEN_SYM_PERCENT";
+		case TOKEN_SYM_AMPERSAND:
+			return "TOKEN_SYM_AMPERSAND";
+		case TOKEN_SYM_OBELISK:
+			return "TOKEN_SYM_OBELISK";
+		case TOKEN_SYM_CARET:
+			return "TOKEN_SYM_CARET";
+		case TOKEN_SYM_LOWERTHAN:
+			return "TOKEN_SYM_LOWERTHAN";
+		case TOKEN_SYM_GREATERTHAN:
+			return "TOKEN_SYM_GREATERTHAN";
+		case TOKEN_WORD_INT:
+			return "TOKEN_WORD_INT";
+		case TOKEN_WORD_FLOAT:
+			return "TOKEN_WORD_FLOAT";
+		case TOKEN_WORD_VOID:
+			return "TOKEN_WORD_VOID";
+		case TOKEN_WORD_BOOL:
+			return "TOKEN_WORD_BOOL";
+		case TOKEN_WORD_STRUCT:
+			return "TOKEN_WORD_STRUCT";
+		case TOKEN_WORD_RETURN:
+			return "TOKEN_WORD_RETURN";
+		case TOKEN_WORD_WHILE:
+			return "TOKEN_WORD_WHILE";
+		case TOKEN_WORD_BREAK:
+			return "TOKEN_WORD_BREAK";
+		case TOKEN_WORD_CONTINUE:
+			return "TOKEN_WORD_CONTINUE";
+		case TOKEN_WORD_ELSE:
+			return "TOKEN_WORD_ELSE";
+		case TOKEN_WORD_ELSE_IF:
+			return "TOKEN_WORD_ELSE_IF";
+		case TOKEN_WORD_IF:
+			return "TOKEN_WORD_IF";
+		case TOKEN_WORD_REF:
+			return "TOKEN_WORD_REF";
+		case TOKEN_WORD_CONST:
+			return "TOKEN_WORD_CONST";
+		case TOKEN_WORD_IMPORT:
+			return "TOKEN_WORD_IMPORT";
+		case TOKEN_LIT_STRING:
+			return "TOKEN_LIT_STRING";
+		case TOKEN_LIT_INT:
+			return "TOKEN_LIT_INT";
+		case TOKEN_LIT_FLOAT:
+			return "TOKEN_LIT_FLOAT";
+		case TOKEN_LIT_BOOL:
+			return "TOKEN_LIT_BOOL";
+		default:
+			return "INVALID";
+	}
+}
 
 typedef struct skToken
 {

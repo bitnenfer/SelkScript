@@ -1,6 +1,7 @@
 #include <slkc/array.h>
 #include <slkc/memory.h>
 
+
 usize sk_array_length(void* raw_array)
 {
 	skArrayHeader* header = sk_backward_ptr(raw_array, sizeof(skArrayHeader));

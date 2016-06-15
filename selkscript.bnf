@@ -96,14 +96,6 @@
 <expr-list>				::= <array-literal> ',' <expr-list>
 							|
 							<array-literal>
-
-<array-literal>			::= '[' <expr-list> ']' 
-							|
-							<struct-literal>
-
-<struct-literal>		::= '{' <expr-list> '}'
-							|
-							<member-access>
 							
 <member-access>			::= <identifier> '.' <member-access>
 							|
@@ -188,6 +180,14 @@
 <integer-const>			::= <digit> { <digit> }
 
 <boolean-const>			::= ( 'true' | 'false' )
+
+<array-const>			::= '[' <expr-list> ']' 
+							|
+							<struct-literal>
+
+<struct-const>			::= '{' <expr-list> '}'
+							|
+							<member-access>
 
 <type-name>				::= 'ref' <type-name>
 							|

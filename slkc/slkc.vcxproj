@@ -149,17 +149,26 @@
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\slkc\array.c" />
     <ClCompile Include="src\slkc\compiler\lexer.c" />
+    <ClCompile Include="src\slkc\compiler\parser.c" />
     <ClCompile Include="src\slkc\compiler\token.c" />
     <ClCompile Include="src\slkc\list.c" />
+    <ClCompile Include="src\slkc\load_file.c" />
     <ClCompile Include="src\slkc\memory.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\slkc\array.h" />
+    <ClInclude Include="include\slkc\compiler\ast_node.h" />
     <ClInclude Include="include\slkc\compiler\lexer.h" />
+    <ClInclude Include="include\slkc\compiler\parser.h" />
     <ClInclude Include="include\slkc\compiler\token.h" />
+    <ClInclude Include="include\slkc\error.h" />
+    <ClInclude Include="include\slkc\load_file.h" />
     <ClInclude Include="include\slkc\macros.h" />
     <ClInclude Include="include\slkc\memory.h" />
     <ClInclude Include="include\slkc\types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\test.slk" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
