@@ -1,6 +1,7 @@
 #include <slkc/compiler/parser.h>
 #include <slkc/memory.h>
 #include <slkc/array.h>
+#include <slkc/error.h>
 
 static skLinearAllocator ast_allocator_struct;
 static skAllocator ast_allocator;
@@ -58,19 +59,35 @@ skAstNode* sk_parse_program(skToken* token_stream, usize* index);
 /* Constants */
 skAstNode* sk_parse_const_bool(skToken* token_stream, usize* index)
 {
-	return NULL;
+	skToken token = token_stream[*index];
+	skAstNode* node = sk_make_node(NODE_CONST_BOOL);
+	node->BOOL = token.value_bool;
+	++(*index);
+	return node;
 }
 skAstNode* sk_parse_const_int(skToken* token_stream, usize* index)
 {
-	return NULL;
+	skToken token = token_stream[*index];
+	skAstNode* node = sk_make_node(NODE_CONST_INT);
+	node->INT32 = token.value_int;
+	++(*index);
+	return node;
 }
 skAstNode* sk_parse_const_float(skToken* token_stream, usize* index)
 {
-	return NULL;
+	skToken token = token_stream[*index];
+	skAstNode* node = sk_make_node(NODE_CONST_FLOAT);
+	node->INT32 = token.value_float;
+	++(*index);
+	return node;
 }
 skAstNode* sk_parse_const_string(skToken* token_stream, usize* index)
 {
-	return NULL;
+	skToken token = token_stream[*index];
+	skAstNode* node = sk_make_node(NODE_CONST_STRING);
+	node->STRING = token.value_ascii_str.array;
+	++(*index);
+	return node;
 }
 skAstNode* sk_parse_const_struct(skToken* token_stream, usize* index)
 {
@@ -78,16 +95,86 @@ skAstNode* sk_parse_const_struct(skToken* token_stream, usize* index)
 }
 skAstNode* sk_parse_const_varname(skToken* token_stream, usize* index)
 {
-	return NULL;
+	skToken token = token_stream[*index];
+	skAstNode* node = sk_make_node(NODE_CONST_VARNAME);
+	node->STRING = token.value_ascii_str.array;
+	++(*index);
+	return node;
 }
 skAstNode* sk_parse_expr_factor(skToken* token_stream, usize* index)
 {
-	return NULL;
+	skAstNode* factor = NULL;
+	skToken token = token_stream[*index];
+	if (token.type == TOKEN_LIT_INT)
+	{
+		factor = sk_parse_const_int(token_stream, index);
+	}
+	else if (token.type == TOKEN_LIT_FLOAT)
+	{
+		factor = sk_parse_const_float(token_stream, index);
+	}
+	else if (token.type == TOKEN_LIT_BOOL)
+	{
+		factor = sk_parse_const_bool(token_stream, index);
+	}
+	else if (token.type == TOKEN_LIT_STRING)
+	{
+		factor = sk_parse_const_string(token_stream, index);
+	}
+	else if (token.type == TOKEN_IDENT)
+	{
+		if (*index + 1 < sk_array_length(token_stream))
+		{
+			if (token_stream[*index + 1].type == TOKEN_SYM_DOT)
+			{
+				factor = sk_parse_expr_member_access(token_stream, index);
+				return factor;
+			}
+		}
+		factor = sk_parse_const_varname(token_stream, index);
+	}
+	else if (token.type == TOKEN_SYM_RCURLY)
+	{
+		factor = sk_parse_const_struct(token_stream, index);
+	}
+	else if (token.type == TOKEN_SYM_RBRACK)
+	{
+		factor = sk_parse_const_array(token_stream, index);
+	}
+	else if (token.type == TOKEN_SYM_RPAREN)
+	{
+		factor = sk_parse_expr_member_access(token_stream, index);
+	}
+	return factor;
 }
 /* Expressions */
 skAstNode* sk_parse_expr_call(skToken* token_stream, usize* index)
 {
-	return NULL;
+	if (*index + 1 < sk_array_length(token_stream))
+	{
+		skToken token = token_stream[*index];
+		skToken ntoken = token_stream[*index + 1];
+		if (token.type == TOKEN_IDENT && token.type == TOKEN_SYM_LPAREN)
+		{
+			skAstNode* call = sk_make_node(NODE_EXPR_CALL);
+			call->left = sk_parse_const_varname(token_stream, index);
+			if (*index < sk_array_length(token_stream) &&
+				token_stream[*index].type != TOKEN_SYM_RPAREN)
+			{
+				sk_emit_error(token_stream[*index].line, "Missing (");
+			}
+			++*index;
+			call->right = sk_parse_expr_list(token_stream, index);
+			if (*index < sk_array_length(token_stream) &&
+				token_stream[*index].type != TOKEN_SYM_RPAREN)
+			{
+				sk_emit_error(token_stream[*index].line, "Missing )");
+			}
+			++*index;
+			return call;
+		}
+	}
+	return sk_parse_expr_factor(token_stream, index);
 }
 skAstNode* sk_parse_expr_negate(skToken* token_stream, usize* index)
 {
@@ -191,7 +278,7 @@ skAstNode* sk_parse_stmt_seq(skToken* token_stream, usize* index)
 {
 	return NULL;
 }
-skAstNode* sk_parse_program(skToken* token_stream, usize* index) 
+skAstNode* sk_parse_program(skToken* token_stream, usize* index)
 {
 	return NULL;
 }
@@ -208,7 +295,7 @@ skAstNode* sk_parse_token_stream(skToken* token_stream)
 		return sk_parse_program(token_stream, &index);
 	}
 	else
-	{		
+	{
 		return sk_make_node(NODE_EOF);
 	}
 }
