@@ -28,6 +28,7 @@ skAstNode* sk_parse_const_array(skToken* token_stream, usize* index);
 skAstNode* sk_parse_const_varname(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_factor(skToken* token_stream, usize* index);
 /* Expressions */
+skAstNode* sk_parse_expr_member_access(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_call(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_negate(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_multiplicative(skToken* token_stream, usize* index);
@@ -38,7 +39,6 @@ skAstNode* sk_parse_expr_compare(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_not(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_and(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_or(skToken* token_stream, usize* index);
-skAstNode* sk_parse_expr_member_access(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_list(skToken* token_stream, usize* index);
 /* Declarations */
 skAstNode* sk_parse_decl_var(skToken* token_stream, usize* index);
@@ -93,11 +93,17 @@ skAstNode* sk_parse_const_string(skToken* token_stream, usize* index)
 }
 skAstNode* sk_parse_const_struct(skToken* token_stream, usize* index)
 {
-	return NULL;
+	skAstNode* const_struct = sk_make_node(NODE_CONST_STRUCT);
+	++*index;
+	const_struct->left = sk_parse_expr_list(token_stream, index);
+	return const_struct;
 }
 skAstNode* sk_parse_const_array(skToken* token_stream, usize* index)
 {
-	return NULL;
+	skAstNode* const_array = sk_make_node(NODE_CONST_ARRAY);
+	++*index;
+	const_array->left = sk_parse_expr_list(token_stream, index);
+	return const_array;
 }
 skAstNode* sk_parse_const_varname(skToken* token_stream, usize* index)
 {
@@ -147,24 +153,77 @@ skAstNode* sk_parse_expr_factor(skToken* token_stream, usize* index)
 	else if (token.type == TOKEN_SYM_LCURLY)
 	{
 		factor = sk_parse_const_struct(token_stream, index);
+		if (*index < sk_array_length(token_stream) &&
+			token_stream[*index].type == TOKEN_SYM_RCURLY)
+		{
+			++*index;
+			return factor;
+		}
+		else
+		{
+			sk_emit_error(token_stream[*index].line, "Missing }");
+		}
 	}
 	else if (token.type == TOKEN_SYM_LBRACK)
 	{
 		factor = sk_parse_const_array(token_stream, index);
+		if (*index < sk_array_length(token_stream) &&
+			token_stream[*index].type == TOKEN_SYM_RBRACK)
+		{
+			++*index;
+			return factor;
+		}
+		else
+		{
+			sk_emit_error(token_stream[*index].line, "Missing ]");
+		}
 	}
 	else if (token.type == TOKEN_SYM_LPAREN)
 	{
 		++*index;
-		factor = sk_parse_expr_member_access(token_stream, index);
+		factor = sk_parse_expr_or(token_stream, index);
 		if (token_stream[*index].type != TOKEN_SYM_RPAREN)
 		{
 			sk_emit_error(token_stream[*index].line, "Missing )");
 		}
 		++*index;
 	}
+	else
+	{
+		sk_emit_error(token_stream[*index].line, "Invalid Token: %s", sk_token_name(token_stream[*index].type));
+	}
 	return factor;
 }
+
 /* Expressions */
+skAstNode* sk_parse_expr_member_access(skToken* token_stream, usize* index)
+{
+	if (*index + 1 < sk_array_length(token_stream))
+	{
+		if ((token_stream[*index].type == TOKEN_IDENT &&
+			token_stream[*index + 1].type == TOKEN_SYM_DOT) ||
+			(index - 1 > 0 && token_stream[*index - 1].type == TOKEN_SYM_DOT) &&
+			token_stream[*index].type == TOKEN_IDENT)
+		{
+			skAstNode* member_access = sk_make_node(NODE_EXPR_MEMBER_ACCESS);
+			member_access->left = sk_parse_const_varname(token_stream, index);
+			if (token_stream[*index].type != TOKEN_SYM_DOT)
+			{
+				return member_access;
+			}
+			++*index;
+			member_access->right = sk_parse_expr_factor(token_stream, index);
+			if (member_access->right == NULL ||
+				member_access->right->type == NODE_EOF)
+			{
+				sk_emit_error(token_stream[*index].line, "Invalid Member Access");
+			}
+			return member_access;
+		}
+	}
+	return NULL;
+}
+
 skAstNode* sk_parse_expr_call(skToken* token_stream, usize* index)
 {
 	if (*index + 1 < sk_array_length(token_stream))
@@ -480,11 +539,7 @@ skAstNode* sk_parse_expr_or(skToken* token_stream, usize* index)
 	}
 	return lhs;
 }
-skAstNode* sk_parse_expr_member_access(skToken* token_stream, usize* index)
-{
-	// TODO: Implement Member Access.
-	return sk_parse_expr_or(token_stream, index);
-}
+
 skAstNode* sk_parse_expr_list(skToken* token_stream, usize* index)
 {
 	skAstNode* expr = sk_make_node(NODE_EXPR_LIST);
@@ -493,7 +548,7 @@ skAstNode* sk_parse_expr_list(skToken* token_stream, usize* index)
 	{
 		return expr;
 	}
-	expr->left = sk_parse_expr_member_access(token_stream, index);
+	expr->left = sk_parse_expr_or(token_stream, index);
 	if (expr->left == NULL)
 	{
 		return NULL;
@@ -565,7 +620,7 @@ skAstNode* sk_parse_stmt_seq(skToken* token_stream, usize* index)
 }
 skAstNode* sk_parse_program(skToken* token_stream, usize* index)
 {
-	return sk_parse_expr_member_access(token_stream, index);
+	return sk_parse_expr_or(token_stream, index);
 }
 
 

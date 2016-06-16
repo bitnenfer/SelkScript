@@ -29,12 +29,6 @@ void print_ast_node(skAstNode* node, ascii_char* side, usize deep)
 			case NODE_CONST_STRING:
 				printf("Value = %s\n", node->STRING);
 				break;
-			case NODE_CONST_STRUCT:
-				printf("Value = {}\n");
-				break;
-			case NODE_CONST_ARRAY:
-				printf("Value = []\n");
-				break;
 			case NODE_CONST_VARNAME:
 				printf("Value = %s\n", node->STRING);
 				break;
