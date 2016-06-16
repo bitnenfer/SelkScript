@@ -13,6 +13,11 @@ typedef enum skEAstNodeType
 	NODE_CONST_STRUCT,
 	NODE_CONST_ARRAY,
 	NODE_CONST_VARNAME,
+	NODE_TYPE_INT,
+	NODE_TYPE_FLOAT,
+	NODE_TYPE_BOOL,
+	NODE_TYPE_VOID,
+	NODE_TYPE_USER,
 	NODE_EXPR_CALL,
 	NODE_EXPR_NEGATE,
 	NODE_EXPR_MULTIPLY,
@@ -37,7 +42,9 @@ typedef enum skEAstNodeType
 	NODE_EXPR_MEMBER_ACCESS,
 	NODE_EXPR_LIST,
 	NODE_DECL_VAR,
+	NODE_DECL_REFERENCE,
 	NODE_DECL_VAR_LIST,
+	NODE_DECL_MEMBER_LIST,
 	NODE_DECL_STRUCT,
 	NODE_DECL_FUNCTION,
 	NODE_STMT_RETURN,
@@ -82,6 +89,16 @@ SK_FORCEINLINE ascii_char* sk_ast_node_name(skAstNode* node)
 	skEAstNodeType type = node->type;
 	switch (type)
 	{
+		case NODE_TYPE_INT:
+			return "NODE_TYPE_INT";
+		case NODE_TYPE_FLOAT:
+			return "NODE_TYPE_FLOAT";
+		case NODE_TYPE_BOOL:
+			return "NODE_TYPE_BOOL";
+		case NODE_TYPE_VOID:
+			return "NODE_TYPE_VOID";
+		case NODE_TYPE_USER:
+			return "NODE_TYPE_USER";
 		case NODE_TYPE_NAME:
 			return "NODE_TYPE_NAME";
 		case NODE_CONST_BOOL:
@@ -144,10 +161,14 @@ SK_FORCEINLINE ascii_char* sk_ast_node_name(skAstNode* node)
 			return "NODE_EXPR_MEMBER_ACCESS";
 		case NODE_EXPR_LIST:
 			return "NODE_EXPR_LIST";
+		case NODE_DECL_REFERENCE:
+			return "NODE_DECL_REFERENCE";
 		case NODE_DECL_VAR:
 			return "NODE_DECL_VAR";
 		case NODE_DECL_VAR_LIST:
 			return "NODE_DECL_VAR_LIST";
+		case NODE_DECL_MEMBER_LIST:
+			return "NODE_DECL_MEMBER_LIST";
 		case NODE_DECL_STRUCT:
 			return "NODE_DECL_STRUCT";
 		case NODE_DECL_FUNCTION:
