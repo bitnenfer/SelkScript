@@ -47,6 +47,7 @@ typedef enum skEAstNodeType
 	NODE_DECL_MEMBER_LIST,
 	NODE_DECL_STRUCT,
 	NODE_DECL_FUNCTION,
+	NODE_DECL_FUNCTION_SIGNATURE,
 	NODE_STMT_RETURN,
 	NODE_STMT_WHILE,
 	NODE_STMT_CONTINUE,
@@ -55,6 +56,7 @@ typedef enum skEAstNodeType
 	NODE_STMT_ELSE,
 	NODE_STMT_ELSE_IF,
 	NODE_STMT_IF,
+	NODE_STMT_BLOCK,
 	NODE_STMT_SEQ,
 	NODE_PROGRAM,
 	NODE_EOF
@@ -89,6 +91,10 @@ SK_FORCEINLINE ascii_char* sk_ast_node_name(skAstNode* node)
 	skEAstNodeType type = node->type;
 	switch (type)
 	{
+		case NODE_STMT_BLOCK:
+			return "NODE_STMT_BLOCK";
+		case NODE_DECL_FUNCTION_SIGNATURE:
+			return "NODE_DECL_FUNCTION_SIGNATURE";
 		case NODE_TYPE_INT:
 			return "NODE_TYPE_INT";
 		case NODE_TYPE_FLOAT:

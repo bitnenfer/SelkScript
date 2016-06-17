@@ -720,9 +720,23 @@ skAstNode* sk_parse_decl_struct(skToken* token_stream, usize* index)
 	}
 	return decl_struct;
 }
-skAstNode* sk_parse_decl_function(skToken* token_stream, usize* index)
+skAstNode* sk_parse_stmt_block(skToken* token_stream, usize* index)
 {
 	return NULL;
+}
+
+skAstNode* sk_parse_function_signature(skToken* token_stream, usize* index)
+{
+	skAstNode* func_sign = sk_make_node(NODE_DECL_FUNCTION_SIGNATURE);
+
+	return func_sign;
+}
+skAstNode* sk_parse_decl_function(skToken* token_stream, usize* index)
+{
+	skAstNode* decl_func = sk_make_node(NODE_DECL_FUNCTION);
+	decl_func->left = sk_parse_function_signature(token_stream, index);
+	decl_func->right = sk_parse_stmt_block(token_stream, index);
+	return decl_func;
 }
 /* Statements */
 skAstNode* sk_parse_stmt_return(skToken* token_stream, usize* index)
