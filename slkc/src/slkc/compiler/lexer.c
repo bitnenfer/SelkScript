@@ -267,11 +267,6 @@ static bool sk_lex_keywords(skToken* token, usize* index, ascii_char* source)
 		token->type = TOKEN_WORD_CONTINUE;
 		return true;
 	}
-	else if (sk_scan_keyword(KEYWORD_ELSE, index, source))
-	{
-		token->type = TOKEN_WORD_ELSE;
-		return true;
-	}
 	else if (sk_scan_keyword(KEYWORD_ELSE_IF, index, source))
 	{
 		token->type = TOKEN_WORD_ELSE_IF;
@@ -280,6 +275,11 @@ static bool sk_lex_keywords(skToken* token, usize* index, ascii_char* source)
 	else if (sk_scan_keyword(KEYWORD_IF, index, source))
 	{
 		token->type = TOKEN_WORD_IF;
+		return true;
+	}
+	else if (sk_scan_keyword(KEYWORD_ELSE, index, source))
+	{
+		token->type = TOKEN_WORD_ELSE;
 		return true;
 	}
 	else if (sk_scan_keyword(KEYWORD_REF, index, source))

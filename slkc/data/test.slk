@@ -1,2 +1,5 @@
-void hello(float[10] x_array, int y = 100) {
+if (true)  {
+} else if (x == 2) {
+} else if (y == 3.14) {
+} else {
 }
