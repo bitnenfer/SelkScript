@@ -72,6 +72,10 @@
 
 <while-stmt>			::= 'while' '(' <or-expr> ')' '{' { <stmt> <line-feed> | <break-stmt>  | <continue-stmt> } '}'
 
+<for-stmt>				::= 'for' '(' <or-expr> ';' <or-expr> ';' <or-expr> ')' '{' { <stmt> <line-feed> | <break-stmt>  | <continue-stmt> } '}'
+
+<foreach-stmt>			::= 'foreach' '(' <type-name> <identifier> 'in' <or-expr> ')' '{' { <stmt> <line-feed> | <break-stmt>  | <continue-stmt> } '}'
+
 <return-stmt>			::= 'return' <array-literal>
 
 !======================================================
@@ -87,6 +91,10 @@
 							<var-decl> ';'
 
 <var-decl>				::= <type-name> ( <identifier> | '=' <or-expr> )
+							|
+							<var-array-decl>
+
+<var-array-decl>		::= <type-name> ( <identifier> '[' <factor> ']' | '=' <or-expr> )
 
 
 !======================================================

@@ -1,3 +1,2 @@
-struct x {
-	ref float a;
+void hello(float[10] x_array, int y = 100) {
 }

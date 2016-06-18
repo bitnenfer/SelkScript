@@ -42,11 +42,13 @@ skAstNode* sk_parse_expr_or(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_list(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_type_name(skToken* token_stream, usize* index);
 /* Declarations */
+skAstNode* sk_parse_decl_var_array(skToken* token_stream, usize* index);
 skAstNode* sk_parse_decl_var(skToken* token_stream, usize* index);
 skAstNode* sk_parse_decl_list(skToken* token_stream, usize* index);
 skAstNode* sk_parse_decl_members(skToken* token_stream, usize* index);
 skAstNode* sk_parse_decl_struct(skToken* token_stream, usize* index);
 skAstNode* sk_parse_decl_function(skToken* token_stream, usize* index);
+skAstNode* sk_parse_function_signature(skToken* token_stream, usize* index);
 /* Statements */
 skAstNode* sk_parse_stmt_return(skToken* token_stream, usize* index);
 skAstNode* sk_parse_stmt_while(skToken* token_stream, usize* index);
@@ -58,6 +60,7 @@ skAstNode* sk_parse_stmt_else_if(skToken* token_stream, usize* index);
 skAstNode* sk_parse_stmt_if(skToken* token_stream, usize* index);
 skAstNode* sk_parse_stmt(skToken* token_stream, usize* index);
 skAstNode* sk_parse_stmt_seq(skToken* token_stream, usize* index);
+skAstNode* sk_parse_stmt_block(skToken* token_stream, usize* index);
 skAstNode* sk_parse_program(skToken* token_stream, usize* index);
 
 /* Constants */
@@ -201,31 +204,32 @@ skAstNode* sk_parse_expr_factor(skToken* token_stream, usize* index)
 skAstNode* sk_parse_expr_type_name(skToken* token_stream, usize* index)
 {
 	skToken token = token_stream[*index];
+	skAstNode* type_name = NULL;
 	if (token.type == TOKEN_WORD_INT)
 	{
 		++*index;
-		return sk_make_node(NODE_TYPE_INT);
+		type_name = sk_make_node(NODE_TYPE_INT);
 	}
 	else if (token.type == TOKEN_WORD_FLOAT)
 	{
 		++*index;
-		return sk_make_node(NODE_TYPE_FLOAT);
+		type_name = sk_make_node(NODE_TYPE_FLOAT);
 	}
 	else if (token.type == TOKEN_WORD_BOOL)
 	{
 		++*index;
-		return sk_make_node(NODE_TYPE_BOOL);
+		type_name = sk_make_node(NODE_TYPE_BOOL);
 	}
 	else if (token.type == TOKEN_WORD_VOID)
 	{
 		++*index;
-		return sk_make_node(NODE_TYPE_VOID);
+		type_name = sk_make_node(NODE_TYPE_VOID);
 	}
 	else if (token.type == TOKEN_IDENT)
 	{
 		skAstNode* user_type = sk_make_node(NODE_TYPE_USER);
 		user_type->left = sk_parse_const_varname(token_stream, index);
-		return user_type;
+		type_name = user_type;
 	}
 	else if (token.type == TOKEN_WORD_REF)
 	{
@@ -236,9 +240,25 @@ skAstNode* sk_parse_expr_type_name(skToken* token_stream, usize* index)
 		{
 			sk_emit_error(token_stream[*index].type, "Invalid type reference.");
 		}
-		return ref_type;
+		type_name = ref_type;
 	}
-	return NULL;
+	if (type_name != NULL)
+	{
+		if (token_stream[*index].type == TOKEN_SYM_LBRACK)
+		{
+			skAstNode* array_type = sk_make_node(NODE_DECL_VAR_ARRAY);
+			++*index;
+			array_type->left = type_name;
+			array_type->right = sk_parse_expr_or(token_stream, index);
+			if (token_stream[*index].type != TOKEN_SYM_RBRACK)
+			{
+				sk_emit_error(token_stream[*index].line, "Missing ]");
+			}
+			++*index;
+			return array_type;
+		}
+	}
+	return type_name;
 }
 
 skAstNode* sk_parse_expr_member_access(skToken* token_stream, usize* index)
@@ -607,6 +627,11 @@ skAstNode* sk_parse_expr_list(skToken* token_stream, usize* index)
 }
 
 /* Declarations */
+skAstNode* sk_parse_decl_var_array(skToken* token_stream, usize* index)
+{
+
+}
+
 skAstNode* sk_parse_decl_var(skToken* token_stream, usize* index)
 {
 	skAstNode* decl_var = sk_make_node(NODE_DECL_VAR);
@@ -722,14 +747,52 @@ skAstNode* sk_parse_decl_struct(skToken* token_stream, usize* index)
 }
 skAstNode* sk_parse_stmt_block(skToken* token_stream, usize* index)
 {
-	return NULL;
+	if (token_stream[*index].type == TOKEN_SYM_LCURLY)
+	{
+		++*index;
+		skAstNode* block = sk_parse_stmt_seq(token_stream, index);
+		if (token_stream[*index].type != TOKEN_SYM_RCURLY)
+		{
+			sk_emit_error(token_stream[*index].line, "Missing }");
+		}
+		++*index;
+		return block;
+	}
+	else
+	{
+		sk_emit_error(token_stream[*index].line, "Missing {");
+	}
+}
+
+skAstNode* sk_parse_decl_type_varname(skToken* token_stream, usize* index)
+{
+	skAstNode* type_varname_pair = sk_make_node(NODE_DECL_TYPE_VARNAME_PAIR);
+	type_varname_pair->left = sk_parse_expr_type_name(token_stream, index);
+	type_varname_pair->right = sk_parse_const_varname(token_stream, index);
+	return type_varname_pair;
 }
 
 skAstNode* sk_parse_function_signature(skToken* token_stream, usize* index)
 {
 	skAstNode* func_sign = sk_make_node(NODE_DECL_FUNCTION_SIGNATURE);
-
-	return func_sign;
+	func_sign->left = sk_parse_decl_type_varname(token_stream, index);
+	if (token_stream[*index].type != TOKEN_SYM_LPAREN)
+	{
+		sk_emit_error(token_stream[*index].line, "Missing (");
+	}
+	++*index;
+	if (token_stream[*index].type == TOKEN_SYM_RPAREN)
+	{
+		++*index;
+		return func_sign;
+	}
+	func_sign->right = sk_parse_decl_list(token_stream, index);
+	if (token_stream[*index].type != TOKEN_SYM_RPAREN)
+	{
+		sk_emit_error(token_stream[*index].line, "Missing )");
+	}
+	++*index;
+	return	func_sign;
 }
 skAstNode* sk_parse_decl_function(skToken* token_stream, usize* index)
 {
@@ -795,7 +858,7 @@ skAstNode* sk_parse_stmt_seq(skToken* token_stream, usize* index)
 }
 skAstNode* sk_parse_program(skToken* token_stream, usize* index)
 {
-	return sk_parse_decl_struct(token_stream, index);
+	return sk_parse_decl_function(token_stream, index);
 }
 
 
