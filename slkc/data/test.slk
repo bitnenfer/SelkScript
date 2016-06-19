@@ -1,5 +1,4 @@
-if (true)  {
-} else if (x == 2) {
-} else if (y == 3.14) {
-} else {
+while(true) {
+	if(true) {
+	}
 }

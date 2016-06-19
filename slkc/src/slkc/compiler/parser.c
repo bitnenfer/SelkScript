@@ -756,6 +756,11 @@ skAstNode* sk_parse_stmt_block(skToken* token_stream, usize* index, skEBlockType
 	if (token_stream[*index].type == TOKEN_SYM_LCURLY)
 	{
 		++*index;
+		if (token_stream[*index].type == TOKEN_SYM_RCURLY)
+		{
+			++*index;
+			return NULL;
+		}
 		skAstNode* block = sk_parse_stmt_seq(token_stream, index, block_type);
 		if (token_stream[*index].type != TOKEN_SYM_RCURLY)
 		{
@@ -935,7 +940,36 @@ skAstNode* sk_parse_stmt_if(skToken* token_stream, usize* index, skEBlockType bl
 skAstNode* sk_parse_stmt(skToken* token_stream, usize* index, skEBlockType block_type)
 {
 	skAstNode* stmt = NULL;
-
+	if (*index < sk_array_length(token_stream))
+	{
+		skToken token = token_stream[*index];
+		if (token.type == TOKEN_WORD_IF)
+		{
+			stmt = sk_make_node(NODE_STMT);
+			stmt->left = sk_parse_stmt_if(token_stream, index, block_type);
+		}
+		else if (token.type == TOKEN_WORD_WHILE)
+		{
+			stmt = sk_make_node(NODE_STMT);
+			stmt->left = sk_parse_stmt_while(token_stream, index);
+		}
+		else if (block_type == LOOP_BLOCK &&
+				 token.type == TOKEN_WORD_BREAK)
+		{
+			stmt = sk_make_node(NODE_STMT);
+			stmt->left = sk_parse_stmt_break(token_stream, index);
+		}
+		else if (block_type == LOOP_BLOCK &&
+				 token.type == TOKEN_WORD_CONTINUE)
+		{
+			stmt = sk_make_node(NODE_STMT);
+			stmt->left = sk_parse_stmt_continue(token_stream, index);
+		}
+	}
+	else
+	{
+		sk_emit_error(0, "Invalid Statement");
+	}
 	return stmt;
 }
 skAstNode* sk_parse_stmt_seq(skToken* token_stream, usize* index, skEBlockType block_type)

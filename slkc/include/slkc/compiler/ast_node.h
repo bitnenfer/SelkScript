@@ -58,7 +58,7 @@ typedef enum skEAstNodeType
 	NODE_STMT_ELSE,
 	NODE_STMT_ELSE_IF,
 	NODE_STMT_IF,
-	NODE_STMT_SEQ,
+	NODE_STMT,
 	NODE_PROGRAM,
 	NODE_EOF
 } skEAstNodeType;
@@ -198,8 +198,8 @@ SK_FORCEINLINE ascii_char* sk_ast_node_name(skAstNode* node)
 			return "NODE_STMT_ELSE_IF";
 		case NODE_STMT_IF:
 			return "NODE_STMT_IF";
-		case NODE_STMT_SEQ:
-			return "NODE_STMT_SEQ";
+		case NODE_STMT:
+			return "NODE_STMT";
 		case NODE_PROGRAM:
 			return "NODE_PROGRAM";
 		case NODE_EOF:
