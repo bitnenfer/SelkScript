@@ -2,8 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-void* sk_load_file(skAllocator allocator, const ascii_char* file_path, usize* file_size)
-{
+void* sk_load_file(skAllocator allocator, const ascii_char* file_path, usize* file_size) {
 	FILE* file = NULL;
 	ascii_char* arr = NULL;
 #if _WIN32

@@ -3,8 +3,7 @@
 
 #include <slkc/types.h>
 
-typedef struct skList
-{
+typedef struct skList {
 	struct skList* prev_node;
 	struct skList* next_node;
 	struct skList* head_node;

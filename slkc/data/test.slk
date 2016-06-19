@@ -1,4 +1,11 @@
-while(true) {
-	if(true) {
-	}
+float add(float x, float y) {
+	return x + y;
+}
+
+float sub(float x, float y) {
+	return x - y;
+}
+
+float add_to_ref(float x, float y, ref float z) {
+	z = x + y;
 }

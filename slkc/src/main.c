@@ -5,18 +5,14 @@
 #include <slkc/array.h>
 #include <stdio.h>
 
-void print_ast_node(skAstNode* node, ascii_char* side, usize deep)
-{
-	if (node != NULL && node->type != NODE_EOF)
-	{
-		for (usize index = 0; index < deep; ++index)
-		{
+void print_ast_node(skAstNode* node, ascii_char* side, usize deep) {
+	if (node != NULL && node->type != NODE_EOF) {
+		for (usize index = 0; index < deep; ++index) {
 			printf("    ");
 		}
 		printf("%s", side);
 		printf("%s ", sk_ast_node_name(node));
-		switch (node->type)
-		{
+		switch (node->type) {
 			case NODE_CONST_BOOL:
 				printf("Value = %s\n", node->BOOL ? "true" : "false");
 				break;
@@ -41,15 +37,13 @@ void print_ast_node(skAstNode* node, ascii_char* side, usize deep)
 	}
 }
 
-int main(int argc, const char* argv[])
-{
+int main(int argc, const char* argv[]) {
 	sk_init_memory(SK_SIZE_MB2);
 	usize source_size;
 	char* source = sk_load_file(sk_gmalloc(), "data/test.slk", &source_size);
 	ascii_char* char_arr = sk_array(sk_gmalloc(), ascii_char, source_size + 1, 4);
 	ascii_char zero = 0;
-	for (usize index = 0; index < source_size; ++index)
-	{
+	for (usize index = 0; index < source_size; ++index) {
 		sk_array_push(char_arr, source[index]);
 	}
 	sk_array_push(char_arr, zero);

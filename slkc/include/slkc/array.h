@@ -6,8 +6,7 @@
 #include <slkc/memory.h>
 #include <string.h>
 
-typedef struct skArrayHeader
-{
+typedef struct skArrayHeader {
 	skAllocator allocator;
 	void* native_ptr;
 	usize real_length;
