@@ -797,15 +797,43 @@ skAstNode* sk_parse_stmt(skToken* token_stream, usize* index, skEBlockType block
 			token.type == TOKEN_WORD_WHILE) {
 			stmt = sk_make_node(NODE_STMT);
 			stmt->left = sk_parse_stmt_while(token_stream, index);
-		} else if (token.type == TOKEN_IDENT &&
-			*index + 1 < sk_array_length(token_stream) &&
-			token_stream[*index + 1].type == TOKEN_SYM_EQUAL) {
+		}
+		else if (token.type == TOKEN_IDENT &&
+				 *index + 1 < sk_array_length(token_stream) &&
+				 token_stream[*index + 1].type == TOKEN_SYM_EQUAL)
+		{
 			stmt = sk_make_node(NODE_STMT);
 			stmt->left = sk_parse_stmt_assign(token_stream, index);
-			if (token_stream[*index].type != TOKEN_SYM_SEMICOLON) {
+			if (token_stream[*index].type != TOKEN_SYM_SEMICOLON)
+			{
 				sk_emit_error(token_stream[*index].line, "Missing ;");
 			}
 			++*index;
+
+		}
+		else if (token.type == TOKEN_IDENT &&
+				 *index + 1 < sk_array_length(token_stream) &&
+				 token_stream[*index + 1].type == TOKEN_SYM_DOT)
+		{
+			skAstNode* s = sk_parse_expr_member_access(token_stream, index);
+			if (token_stream[*index].type == TOKEN_SYM_EQUAL)
+			{
+				skAstNode* assign = sk_make_node(NODE_STMT_ASSING);
+				assign->left = s;
+				++*index;
+				assign->right = sk_parse_expr_or(token_stream, index);
+				if (token_stream[*index].type != TOKEN_SYM_SEMICOLON)
+				{
+					sk_emit_error(token_stream[*index].line, "Missing ;");
+				}
+				++*index;
+				stmt = sk_make_node(NODE_STMT);
+				stmt->left = assign;
+			}
+			else
+			{
+				sk_emit_error(token_stream[*index].line, "Invalid assignment statement.");
+			}
 		} else if (sk_is_typename(token)) {
 			usize offset = token.type == TOKEN_WORD_REF || token.type == TOKEN_WORD_CONST ? 3 : 2;
 			skToken next = token_stream[*index + 1];
