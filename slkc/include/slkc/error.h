@@ -9,7 +9,7 @@
 	fprintf(stderr, "SelkScript Error Line:%d ", line); \
 	fprintf(stderr, ##message, __VA_ARGS__); \
 	fprintf(stderr, "\n"); \
-	getchar(); \
+	assert(0); \
 	exit(EXIT_FAILURE); \
 }
 

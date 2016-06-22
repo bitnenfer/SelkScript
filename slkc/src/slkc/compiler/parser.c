@@ -47,7 +47,7 @@ skAstNode* sk_parse_expr_or(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_list(skToken* token_stream, usize* index);
 skAstNode* sk_parse_expr_type_name(skToken* token_stream, usize* index);
 /* Declarations */
-skAstNode* sk_parse_decl_var_array(skToken* token_stream, usize* index);
+skAstNode* sk_parse_decl_const_var(skToken* token_stream, usize* index);
 skAstNode* sk_parse_decl_var(skToken* token_stream, usize* index);
 skAstNode* sk_parse_decl_list(skToken* token_stream, usize* index);
 skAstNode* sk_parse_decl_members(skToken* token_stream, usize* index);
@@ -198,13 +198,26 @@ skAstNode* sk_parse_expr_type_name(skToken* token_stream, usize* index) {
 			sk_emit_error(token_stream[*index].type, "Invalid type reference.");
 		}
 		type_name = ref_type;
+	} else if (token.type == TOKEN_WORD_CONST) {
+		skAstNode* const_type = sk_make_node(NODE_DECL_CONST);
+		++*index;
+		const_type->left = sk_parse_expr_type_name(token_stream, index);
+		if (const_type->left == NULL) {
+			sk_emit_error(token_stream[*index].type, "Invalid type reference.");
+		}
+		type_name = const_type;
 	}
 	if (type_name != NULL) {
 		if (token_stream[*index].type == TOKEN_SYM_LBRACK) {
-			skAstNode* array_type = sk_make_node(NODE_DECL_VAR_ARRAY);
+			skAstNode* array_type = NULL;
 			++*index;
+			if (token_stream[*index].type != TOKEN_SYM_RBRACK) {
+				array_type = sk_make_node(NODE_DECL_VAR_SIZED_ARRAY);
+				array_type->right = sk_parse_expr_or(token_stream, index);
+			} else {
+				array_type = sk_make_node(NODE_DECL_VAR_NOSIZED_ARRAY);
+			}
 			array_type->left = type_name;
-			array_type->right = sk_parse_expr_or(token_stream, index);
 			if (token_stream[*index].type != TOKEN_SYM_RBRACK) {
 				sk_emit_error(token_stream[*index].line, "Missing ]");
 			}
@@ -501,8 +514,11 @@ skAstNode* sk_parse_expr_list(skToken* token_stream, usize* index) {
 }
 
 /* Declarations */
-skAstNode* sk_parse_decl_var_array(skToken* token_stream, usize* index) {
-
+skAstNode* sk_parse_decl_const_var(skToken* token_stream, usize* index) {
+	++*index;
+	skAstNode* const_decl = sk_make_node(NODE_DECL_CONST);
+	const_decl->left = sk_parse_decl_var(token_stream, index);
+	return const_decl;
 }
 
 skAstNode* sk_parse_decl_var(skToken* token_stream, usize* index) {
@@ -533,7 +549,8 @@ skAstNode* sk_parse_decl_list(skToken* token_stream, usize* index) {
 		token.type == TOKEN_WORD_BOOL ||
 		token.type == TOKEN_WORD_VOID ||
 		token.type == TOKEN_IDENT ||
-		token.type == TOKEN_WORD_REF) {
+		token.type == TOKEN_WORD_REF ||
+		token.type == TOKEN_WORD_CONST) {
 		decl->left = sk_parse_decl_var(token_stream, index);
 	} else {
 		return NULL;
@@ -559,7 +576,8 @@ skAstNode* sk_parse_decl_members(skToken* token_stream, usize* index) {
 		token.type == TOKEN_WORD_BOOL ||
 		token.type == TOKEN_WORD_VOID ||
 		token.type == TOKEN_IDENT ||
-		token.type == TOKEN_WORD_REF) {
+		token.type == TOKEN_WORD_REF ||
+		token.type == TOKEN_WORD_CONST) {
 		decl->left = sk_parse_decl_var(token_stream, index);
 	} else {
 		return NULL;
@@ -763,7 +781,8 @@ bool sk_is_typename(skToken token) {
 		token.type == TOKEN_WORD_BOOL ||
 		token.type == TOKEN_WORD_FLOAT ||
 		token.type == TOKEN_WORD_REF ||
-		token.type == TOKEN_IDENT);
+		token.type == TOKEN_IDENT ||
+		token.type == TOKEN_WORD_CONST);
 }
 
 skAstNode* sk_parse_stmt(skToken* token_stream, usize* index, skEBlockType block_type) {
@@ -788,7 +807,10 @@ skAstNode* sk_parse_stmt(skToken* token_stream, usize* index, skEBlockType block
 			}
 			++*index;
 		} else if (sk_is_typename(token)) {
-			usize offset = token.type == TOKEN_WORD_REF ? 3 : 2;
+			usize offset = token.type == TOKEN_WORD_REF || token.type == TOKEN_WORD_CONST ? 3 : 2;
+			skToken next = token_stream[*index + 1];
+			if (next.type == TOKEN_WORD_REF)
+				offset += 1;
 			if (*index + offset < sk_array_length(token_stream) &&
 				token_stream[*index + offset].type == TOKEN_SYM_LPAREN) {
 				stmt = sk_make_node(NODE_STMT);
@@ -815,6 +837,10 @@ skAstNode* sk_parse_stmt(skToken* token_stream, usize* index, skEBlockType block
 			token.type == TOKEN_WORD_RETURN) {
 			stmt = sk_make_node(NODE_STMT);
 			stmt->left = sk_parse_stmt_return(token_stream, index);
+		} else if (block_type == NONE &&
+			token.type == TOKEN_WORD_STRUCT) {
+			stmt = sk_make_node(NODE_STMT);
+			stmt->left = sk_parse_decl_struct(token_stream, index);
 		}
 	} else {
 		sk_emit_error(0, "Invalid Statement");
