@@ -248,7 +248,7 @@ skAstNode* sk_parse_expr_member_access(skToken* token_stream, usize* index) {
 			return member_access;
 		}
 	}
-	return NULL;
+	return sk_parse_const_varname(token_stream, index);
 }
 
 skAstNode* sk_parse_expr_call(skToken* token_stream, usize* index) {
@@ -707,7 +707,7 @@ skAstNode* sk_parse_stmt_assign(skToken* token_stream, usize* index) {
 		token_stream[*index].type == TOKEN_IDENT &&
 		token_stream[*index + 1].type == TOKEN_SYM_EQUAL) {
 		skAstNode* assign = sk_make_node(NODE_STMT_ASSING);
-		assign->left = sk_parse_const_varname(token_stream, index);
+		assign->left = sk_parse_expr_member_access(token_stream, index);
 		if (token_stream[*index].type != TOKEN_SYM_EQUAL) {
 			sk_emit_error(token_stream[*index].line, "Invalide assignment");
 		}
