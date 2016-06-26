@@ -133,7 +133,8 @@ skAstNode* sk_parse_expr_factor(skToken* token_stream, usize* index) {
 		factor = sk_parse_const_string(token_stream, index);
 	} else if (token.type == TOKEN_IDENT) {
 		if (*index + 1 < sk_array_length(token_stream)) {
-			if (token_stream[*index + 1].type == TOKEN_SYM_DOT) {
+			if (token_stream[*index + 1].type == TOKEN_SYM_DOT ||
+				token_stream[*index + 1].type == TOKEN_SYM_LBRACK) {
 				factor = sk_parse_expr_member_access(token_stream, index);
 				return factor;
 			}
@@ -228,6 +229,28 @@ skAstNode* sk_parse_expr_type_name(skToken* token_stream, usize* index) {
 	return type_name;
 }
 
+skAstNode* sk_parse_expr_array_index(skToken* token_stream, usize* index) {
+	skAstNode* index_expr = NULL;
+	if (token_stream[*index].type == TOKEN_SYM_LBRACK) {
+		index_expr = sk_make_node(NODE_EXPR_ARRAY_INDEX);
+		++*index;
+		index_expr->left = sk_parse_expr_or(token_stream, index);
+		if (token_stream[*index].type != TOKEN_SYM_RBRACK) {
+			sk_emit_error(token_stream[*index].line, "Missing ]");
+		}
+		++*index;
+		index_expr->right = sk_parse_expr_array_index(token_stream, index);
+	}
+	return index_expr;
+}
+
+skAstNode* sk_parse_expr_array_access(skToken* token_stream, usize* index) {
+	skAstNode* array_access = sk_make_node(NODE_EXPR_ARRAY_ACCESS);
+	array_access->left = sk_parse_const_varname(token_stream, index);
+	array_access->right = sk_parse_expr_array_index(token_stream, index);
+	return array_access;
+}
+
 skAstNode* sk_parse_expr_member_access(skToken* token_stream, usize* index) {
 	if (*index + 1 < sk_array_length(token_stream)) {
 		if ((token_stream[*index].type == TOKEN_IDENT &&
@@ -246,6 +269,9 @@ skAstNode* sk_parse_expr_member_access(skToken* token_stream, usize* index) {
 				sk_emit_error(token_stream[*index].line, "Invalid Member Access");
 			}
 			return member_access;
+		} else if (token_stream[*index].type == TOKEN_IDENT && 
+			token_stream[*index + 1 ].type == TOKEN_SYM_LBRACK) {
+			return sk_parse_expr_array_access(token_stream, index);
 		}
 	}
 	return sk_parse_const_varname(token_stream, index);
@@ -793,45 +819,36 @@ skAstNode* sk_parse_stmt(skToken* token_stream, usize* index, skEBlockType block
 			token.type == TOKEN_WORD_IF) {
 			stmt = sk_make_node(NODE_STMT);
 			stmt->left = sk_parse_stmt_if(token_stream, index, block_type);
-		} else if (block_type != NONE && 
+		} else if (block_type != NONE &&
 			token.type == TOKEN_WORD_WHILE) {
 			stmt = sk_make_node(NODE_STMT);
 			stmt->left = sk_parse_stmt_while(token_stream, index);
-		}
-		else if (token.type == TOKEN_IDENT &&
-				 *index + 1 < sk_array_length(token_stream) &&
-				 token_stream[*index + 1].type == TOKEN_SYM_EQUAL)
-		{
+		} else if (token.type == TOKEN_IDENT &&
+			*index + 1 < sk_array_length(token_stream) &&
+			token_stream[*index + 1].type == TOKEN_SYM_EQUAL) {
 			stmt = sk_make_node(NODE_STMT);
 			stmt->left = sk_parse_stmt_assign(token_stream, index);
-			if (token_stream[*index].type != TOKEN_SYM_SEMICOLON)
-			{
+			if (token_stream[*index].type != TOKEN_SYM_SEMICOLON) {
 				sk_emit_error(token_stream[*index].line, "Missing ;");
 			}
 			++*index;
 
-		}
-		else if (token.type == TOKEN_IDENT &&
-				 *index + 1 < sk_array_length(token_stream) &&
-				 token_stream[*index + 1].type == TOKEN_SYM_DOT)
-		{
+		} else if (token.type == TOKEN_IDENT &&
+			*index + 1 < sk_array_length(token_stream) &&
+			token_stream[*index + 1].type == TOKEN_SYM_DOT) {
 			skAstNode* s = sk_parse_expr_member_access(token_stream, index);
-			if (token_stream[*index].type == TOKEN_SYM_EQUAL)
-			{
+			if (token_stream[*index].type == TOKEN_SYM_EQUAL) {
 				skAstNode* assign = sk_make_node(NODE_STMT_ASSING);
 				assign->left = s;
 				++*index;
 				assign->right = sk_parse_expr_or(token_stream, index);
-				if (token_stream[*index].type != TOKEN_SYM_SEMICOLON)
-				{
+				if (token_stream[*index].type != TOKEN_SYM_SEMICOLON) {
 					sk_emit_error(token_stream[*index].line, "Missing ;");
 				}
 				++*index;
 				stmt = sk_make_node(NODE_STMT);
 				stmt->left = assign;
-			}
-			else
-			{
+			} else {
 				sk_emit_error(token_stream[*index].line, "Invalid assignment statement.");
 			}
 		} else if (sk_is_typename(token)) {
@@ -845,7 +862,7 @@ skAstNode* sk_parse_stmt(skToken* token_stream, usize* index, skEBlockType block
 				stmt->left = sk_parse_decl_function(token_stream, index);
 			} else if (*index + offset < sk_array_length(token_stream) &&
 				(token_stream[*index + offset].type == TOKEN_SYM_EQUAL ||
-				token_stream[*index + offset].type == TOKEN_SYM_SEMICOLON)) {
+					token_stream[*index + offset].type == TOKEN_SYM_SEMICOLON)) {
 				stmt = sk_make_node(NODE_STMT);
 				stmt->left = sk_parse_decl_var(token_stream, index);
 				if (token_stream[*index].type != TOKEN_SYM_SEMICOLON) {

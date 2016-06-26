@@ -40,6 +40,8 @@ typedef enum skEAstNodeType
 	NODE_EXPR_LOGIC_AND,
 	NODE_EXPR_LOGIC_OR,
 	NODE_EXPR_MEMBER_ACCESS,
+	NODE_EXPR_ARRAY_ACCESS,
+	NODE_EXPR_ARRAY_INDEX,
 	NODE_EXPR_LIST,
 	NODE_DECL_CONST,
 	NODE_DECL_VAR,
@@ -94,6 +96,10 @@ SK_FORCEINLINE ascii_char* sk_ast_node_name(skAstNode* node)
 	skEAstNodeType type = node->type;
 	switch (type)
 	{
+		case NODE_EXPR_ARRAY_INDEX:
+			return "NODE_EXPR_ARRAY_INDEX";
+		case NODE_EXPR_ARRAY_ACCESS:
+			return "NODE_EXPR_ARRAY_ACCESS";
 		case NODE_DECL_CONST:
 			return "NODE_DECL_CONST";
 		case NODE_DECL_VAR_NOSIZED_ARRAY:
