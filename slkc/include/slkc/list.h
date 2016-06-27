@@ -17,6 +17,7 @@ void sk_list_insert_before(skList* list, skList* node);
 void sk_list_insert_after(skList* list, skList* node);
 void sk_list_insert_tail(skList* list, skList* target);
 void sk_list_insert_head(skList* list, skList* target);
+skList* sk_list_tail(skList* list);
 
 #define sk_list_init(list, owner) {\
 	list->owner = (void*)owner;\

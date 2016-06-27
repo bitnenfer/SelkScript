@@ -56,3 +56,7 @@ void sk_list_insert_tail(skList* list, skList* target) {
 void sk_list_insert_head(skList* list, skList* target) {
 	sk_list_insert_after(list, target->head_node);
 }
+
+skList* sk_list_tail(skList* list) {
+	return list->head_node->prev_node;
+}
